@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bé Tập Đếm Hình</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #b3d4fc;
+            touch-action: none; /* Chống cuộn trang */
+            user-select: none;
+            -webkit-user-select: none;
+            overflow: hidden;
+        }
+
+        /* Hiệu ứng chữ nổi Neon Stroke */
+        .text-neon-stroke {
+            color: #e11d48;
+            text-shadow: 
+                -2px -2px 0 #fde047, 
+                 2px -2px 0 #fde047, 
+                -2px  2px 0 #fde047, 
+                 2px  2px 0 #fde047, 
+                 0px  3px 0 #fde047, 
+                 2px  4px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Custom Scrollbar for small screens if needed */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 10px;
+        }
+        
+        .shape-btn:active {
+            transform: scale(0.90);
+        }
+
+        /* Ẩn mũi tên mặc định của input type number */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        /* Thêm hiệu ứng cho màn hình chúc mừng */
+        @keyframes bounce-star {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.8; }
+            50% { transform: translateY(-20px) scale(1.2); opacity: 1; }
+        }
+        .animate-bounce-star {
+            animation: bounce-star 1.5s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen flex flex-col items-center p-2 sm:p-4">
+
+    <!-- Layout Container (Tối đa 800px) -->
+    <div class="w-full max-w-[800px] h-full flex flex-col relative">
+        
+        <!-- Header: Viên thuốc trắng -->
+        <header id="main-header" class="bg-white rounded-full px-5 py-3 shadow-md flex justify-between items-center mb-4 w-full">
+            <h1 class="text-neon-stroke font-black text-xl sm:text-2xl uppercase tracking-wider">Bé Tập Đếm Hình</h1>
+            <div class="flex items-center gap-2">
+                <span class="text-gray-600 font-bold text-sm sm:text-base">Tiến trình: <span id="progress-text">1/6</span></span>
+                <div class="flex gap-1" id="star-container">
+                    <!-- Stars injected via JS -->
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Container -->
+        <main class="flex-1 w-full relative flex flex-col items-center justify-center">
+            
+            <!-- Màn hình Start -->
+            <div id="screen-start" class="absolute inset-0 flex flex-col items-center justify-center p-6 z-50 bg-[#b3d4fc] rounded-[24px] shadow-xl">
+                <h2 class="text-4xl sm:text-6xl md:text-7xl font-black text-neon-stroke mb-4 text-center uppercase leading-tight">
+                    Bé Tập<br>Đếm Hình
+                </h2>
+                <p class="text-indigo-600 font-bold mb-8 text-center text-base sm:text-lg italic">
+                    "Hiên nhà 1.7 – Nơi yêu thương đón những bước chân đầu tiên"
+                </p>
+                
+                <input type="text" id="student-name" placeholder="Tên của con là gì nhỉ?" class="mb-8 px-6 py-4 rounded-full text-center text-xl sm:text-2xl text-indigo-700 font-bold focus:outline-none shadow-inner border-4 border-white w-full max-w-sm placeholder-indigo-300">
+                
+                <button onclick="startGame()" class="bg-rose-500 hover:bg-rose-600 text-white font-bold text-2xl px-12 py-4 rounded-full shadow-lg transform transition active:scale-95 flex items-center gap-3 border-b-4 border-rose-700">
+                    <svg class="w-8 h-8 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    Vào lớp thôi!
+                </button>
+            </div>
+
+            <!-- Màn hình Chơi -->
+            <div id="screen-play" class="absolute inset-0 flex flex-col p-4 sm:p-6 z-10 hidden bg-white rounded-[24px] shadow-xl overflow-hidden">
+                
+                <!-- Thanh Chọn Level (Navigation Bar) -->
+                <div id="level-selector" class="w-full flex flex-wrap justify-center gap-2 sm:gap-3 pb-3 mb-3 border-b-2 border-indigo-50 shrink-0 px-1">
+                    <!-- Buttons injected via JS -->
+                </div>
+
+                <!-- Thanh công cụ (Loa & Nút Kiểm Tra góc phải) -->
+                <div class="w-full flex justify-between items-center mb-4 shrink-0 pb-2">
+                    <button onclick="playInstruction()" class="bg-cyan-100 hover:bg-cyan-200 text-cyan-800 font-bold px-4 py-2 sm:px-6 sm:py-3 rounded-full flex items-center gap-2 shadow-sm transform transition active:scale-95 border border-cyan-300">
+                        <svg class="w-6 h-6 fill-current text-rose-500" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                        <span class="hidden sm:inline">Nghe yêu cầu</span>
+                    </button>
+
+                    <button onclick="checkAnswer()" class="bg-green-500 hover:bg-green-600 text-white font-bold text-lg sm:text-xl px-6 py-2 sm:px-8 sm:py-3 rounded-full shadow-lg transform transition active:scale-95 border-b-4 border-green-700 relative overflow-hidden group">
+                        <span class="relative z-10">Kiểm Tra</span>
+                        <div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
+                    </button>
+                </div>
+
+                <!-- Khu vực nội dung bài tập (Trái hình - Phải form) -->
+                <div class="flex-1 w-full flex flex-col sm:flex-row gap-6 sm:gap-10 items-center justify-center overflow-y-auto custom-scroll pb-10">
+                    
+                    <!-- SVG Image Container (Bên Trái) -->
+                    <div id="image-container" class="w-full sm:w-1/2 max-w-[350px] aspect-square flex justify-center items-center bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 p-4">
+                        <!-- SVG sẽ được render vào đây -->
+                    </div>
+
+                    <!-- Khu vực nhập liệu (Bên Phải) -->
+                    <div class="w-full sm:w-1/2 max-w-[400px] flex flex-col gap-4" id="input-container">
+                        <!-- Các hàng input sẽ được tạo bằng JS -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Màn hình Hoàn thành -->
+            <div id="screen-celebrate" class="absolute inset-0 flex flex-col items-center justify-center p-6 z-50 hidden bg-white rounded-[24px] shadow-xl overflow-hidden relative">
+                <!-- Hiệu ứng sao -->
+                <div class="absolute inset-0 pointer-events-none flex justify-around items-center opacity-70 text-4xl sm:text-6xl px-4 z-0">
+                    <div class="animate-bounce-star" style="animation-delay: 0s;">⭐</div>
+                    <div class="animate-bounce-star" style="animation-delay: 0.3s;">🌟</div>
+                    <div class="animate-bounce-star" style="animation-delay: 0.6s;">⭐</div>
+                    <div class="animate-bounce-star" style="animation-delay: 0.9s;">🌟</div>
+                    <div class="animate-bounce-star" style="animation-delay: 1.2s;">⭐</div>
+                </div>
+                
+                <h2 class="text-3xl sm:text-5xl md:text-6xl font-black text-neon-stroke mb-8 text-center relative z-10 leading-tight" id="celebrate-text">
+                    Chúc mừng <span id="celebrate-name" class="text-indigo-600"></span><br>em đã hoàn thành bài tập
+                </h2>
+                <button onclick="resetGame()" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold text-2xl px-10 py-4 rounded-full shadow-lg transform transition active:scale-95 relative z-10 border-b-4 border-indigo-700">
+                    Chơi lại từ đầu
+                </button>
+            </div>
+            
+            <!-- Footer Slogan (Hiển thị ở mọi màn hình dưới cùng Main Card) -->
+            <div class="absolute bottom-4 w-full text-center z-40 pointer-events-none hidden sm:block">
+                <p class="text-slate-400 font-semibold text-sm italic">
+                    "Hiên nhà 1.7 – Nơi yêu thương đón những bước chân đầu tiên"
+                </p>
+            </div>
+
+        </main>
+        
+        <!-- Footer Slogan cho Mobile -->
+        <div class="w-full text-center mt-3 sm:hidden">
+            <p class="text-indigo-500 font-semibold text-xs italic">
+                "Hiên nhà 1.7 – Nơi yêu thương đón những bước chân đầu tiên"
+            </p>
+        </div>
+    </div>
+
+    <!-- Cấu hình Dữ liệu và Logic Game -->
+    <script>
+        // --- 1. DỮ LIỆU CÁC MÀN CHƠI (6 Hình) ---
+        const levelsData = [
+            {
+                id: 1,
+                // 1. Ngôi nhà
+                svg: `
+                    <svg viewBox="0 0 300 300" class="w-full h-full drop-shadow-md">
+                        <!-- Mái nhà (Tam giác) -->
+                        <polygon points="150,40 40,150 260,150" fill="#ef4444" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <!-- Thân nhà (Vuông) -->
+                        <rect x="70" y="150" width="160" height="130" fill="#facc15" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <!-- Cửa chính (Chữ nhật) -->
+                        <rect x="180" y="210" width="40" height="70" fill="#3b82f6" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <!-- Cửa sổ (Vuông) -->
+                        <rect x="90" y="170" width="40" height="40" fill="#60a5fa" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                    </svg>
+                `,
+                shapesToAsk: ['square', 'triangle', 'rectangle'], // Các hình cần đếm trong bài
+                answers: { square: 2, triangle: 1, rectangle: 1 }
+            },
+            {
+                id: 2,
+                // 2. Thuyền buồm
+                svg: `
+                    <svg viewBox="0 0 300 300" class="w-full h-full drop-shadow-md">
+                        <!-- Thân thuyền -->
+                        <polygon points="40,200 260,200 220,260 80,260" fill="#3b82f6" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <!-- Cột buồm (Chữ nhật) -->
+                        <rect x="145" y="50" width="10" height="150" fill="#f59e0b" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <!-- Buồm trái (Tam giác) -->
+                        <polygon points="140,60 50,180 140,180" fill="#ef4444" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <!-- Buồm phải (Tam giác) -->
+                        <polygon points="160,80 230,180 160,180" fill="#10b981" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <!-- Ô cửa (Tròn) -->
+                        <circle cx="110" cy="230" r="15" fill="#facc15" stroke="#1f2937" stroke-width="4"/>
+                        <circle cx="150" cy="230" r="15" fill="#facc15" stroke="#1f2937" stroke-width="4"/>
+                        <circle cx="190" cy="230" r="15" fill="#facc15" stroke="#1f2937" stroke-width="4"/>
+                    </svg>
+                `,
+                shapesToAsk: ['triangle', 'rectangle', 'circle'],
+                answers: { triangle: 2, rectangle: 1, circle: 3 }
+            },
+            {
+                id: 3,
+                // 3. Robot
+                svg: `
+                    <svg viewBox="0 0 300 300" class="w-full h-full drop-shadow-md">
+                        <!-- Đầu (Vuông) -->
+                        <rect x="110" y="30" width="80" height="80" fill="#60a5fa" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <!-- Mắt (Tròn) -->
+                        <circle cx="130" cy="60" r="10" fill="#ffffff" stroke="#1f2937" stroke-width="4"/>
+                        <circle cx="170" cy="60" r="10" fill="#ffffff" stroke="#1f2937" stroke-width="4"/>
+                        <!-- Thân (Chữ nhật) -->
+                        <rect x="90" y="120" width="120" height="100" fill="#facc15" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <!-- Tay (Chữ nhật) -->
+                        <rect x="40" y="130" width="50" height="20" fill="#ef4444" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <rect x="210" y="130" width="50" height="20" fill="#ef4444" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <!-- Chân (Chữ nhật) -->
+                        <rect x="110" y="220" width="25" height="50" fill="#10b981" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <rect x="165" y="220" width="25" height="50" fill="#10b981" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <!-- Nút bụng (Tròn) -->
+                        <circle cx="120" cy="170" r="12" fill="#ef4444" stroke="#1f2937" stroke-width="3"/>
+                        <circle cx="150" cy="170" r="12" fill="#3b82f6" stroke="#1f2937" stroke-width="3"/>
+                        <circle cx="180" cy="170" r="12" fill="#10b981" stroke="#1f2937" stroke-width="3"/>
+                    </svg>
+                `,
+                shapesToAsk: ['square', 'rectangle', 'circle'],
+                answers: { square: 1, rectangle: 5, circle: 5 }
+            },
+            {
+                id: 4,
+                // 4. Con cá
+                svg: `
+                    <svg viewBox="0 0 300 300" class="w-full h-full drop-shadow-md">
+                        <!-- Thân (Tam giác to) -->
+                        <polygon points="50,150 200,60 200,240" fill="#facc15" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <!-- Đuôi (Tam giác) -->
+                        <polygon points="200,150 270,100 270,200" fill="#ef4444" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <!-- Vây trên (Tam giác) -->
+                        <polygon points="130,105 170,40 180,95" fill="#3b82f6" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <!-- Vây dưới (Tam giác) -->
+                        <polygon points="130,195 170,260 180,205" fill="#3b82f6" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <!-- Mắt (Tròn) -->
+                        <circle cx="90" cy="150" r="10" fill="#ffffff" stroke="#1f2937" stroke-width="4"/>
+                        <circle cx="90" cy="150" r="3" fill="#1f2937"/>
+                        <!-- Bong bóng (Tròn) -->
+                        <circle cx="40" cy="100" r="8" fill="#93c5fd" stroke="#1f2937" stroke-width="2"/>
+                        <circle cx="25" cy="70" r="5" fill="#93c5fd" stroke="#1f2937" stroke-width="2"/>
+                    </svg>
+                `,
+                shapesToAsk: ['triangle', 'circle'],
+                answers: { triangle: 4, circle: 3 }
+            },
+            {
+                id: 5,
+                // 5. Tên lửa
+                svg: `
+                    <svg viewBox="0 0 300 300" class="w-full h-full drop-shadow-md">
+                        <!-- Cánh trái (Tam giác) -->
+                        <polygon points="100,120 30,190 100,230" fill="#3b82f6" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <!-- Cánh phải (Tam giác) -->
+                        <polygon points="200,120 270,190 200,230" fill="#3b82f6" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <!-- Lửa đuôi (Tam giác) -->
+                        <polygon points="120,230 180,230 150,280" fill="#f97316" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <!-- Thân tên lửa (Chữ nhật) -->
+                        <rect x="100" y="100" width="100" height="130" fill="#facc15" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <!-- Đầu tên lửa (Tam giác) -->
+                        <polygon points="150,20 100,100 200,100" fill="#ef4444" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <!-- Cửa sổ (Tròn) -->
+                        <circle cx="150" cy="150" r="25" fill="#60a5fa" stroke="#1f2937" stroke-width="4"/>
+                    </svg>
+                `,
+                shapesToAsk: ['triangle', 'rectangle', 'circle'],
+                answers: { triangle: 4, rectangle: 1, circle: 1 }
+            },
+            {
+                id: 6,
+                // 6. Xe tải
+                svg: `
+                    <svg viewBox="0 0 300 300" class="w-full h-full drop-shadow-md">
+                        <!-- Thùng xe (Chữ nhật) -->
+                        <rect x="110" y="80" width="160" height="120" fill="#ef4444" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <!-- Đầu xe (Vuông) -->
+                        <rect x="30" y="120" width="80" height="80" fill="#10b981" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <!-- Cửa sổ đầu xe (Vuông nhỏ) -->
+                        <rect x="40" y="130" width="40" height="40" fill="#60a5fa" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <!-- Bánh xe (Tròn) -->
+                        <circle cx="70" cy="220" r="25" fill="#374151" stroke="#1f2937" stroke-width="4"/>
+                        <circle cx="210" cy="220" r="25" fill="#374151" stroke="#1f2937" stroke-width="4"/>
+                    </svg>
+                `,
+                shapesToAsk: ['square', 'rectangle', 'circle'],
+                answers: { square: 2, rectangle: 1, circle: 2 }
+            },
+            {
+                id: 7,
+                // 7. Hình chữ nhật chia 2 (Bài 1 trái)
+                svg: `
+                    <svg viewBox="0 0 300 300" class="w-full h-full drop-shadow-md">
+                        <rect x="50" y="100" width="200" height="100" fill="#e0f2fe" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <line x1="150" y1="100" x2="150" y2="200" stroke="#1f2937" stroke-width="4" stroke-linecap="round"/>
+                    </svg>
+                `,
+                shapesToAsk: ['square'],
+                answers: { square: 2 }
+            },
+            {
+                id: 8,
+                // 8. Tam giác chia đôi (Bài 1 phải)
+                svg: `
+                    <svg viewBox="0 0 300 300" class="w-full h-full drop-shadow-md">
+                        <polygon points="50,50 50,250 250,250" fill="#fef08a" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <line x1="50" y1="50" x2="150" y2="250" stroke="#1f2937" stroke-width="4" stroke-linecap="round"/>
+                    </svg>
+                `,
+                shapesToAsk: ['triangle'],
+                answers: { triangle: 3 }
+            },
+            {
+                id: 9,
+                // 9. Lưới ô vuông 2x2 (Bài 3 trái)
+                svg: `
+                    <svg viewBox="0 0 300 300" class="w-full h-full drop-shadow-md">
+                        <rect x="50" y="50" width="200" height="200" fill="#bbf7d0" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <line x1="150" y1="50" x2="150" y2="250" stroke="#1f2937" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="50" y1="150" x2="250" y2="150" stroke="#1f2937" stroke-width="4" stroke-linecap="round"/>
+                    </svg>
+                `,
+                shapesToAsk: ['square'],
+                answers: { square: 5 }
+            },
+            {
+                id: 10,
+                // 10. Hình vuông chứa hình thoi (Bài 2 trái)
+                svg: `
+                    <svg viewBox="-20 -20 340 340" class="w-full h-auto max-h-64 object-contain overflow-visible drop-shadow-md">
+                        <rect x="50" y="50" width="200" height="200" fill="#fbcfe8" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                        <polygon points="150,50 250,150 150,250 50,150" fill="#e9d5ff" stroke="#1f2937" stroke-width="4" stroke-linejoin="round"/>
+                    </svg>
+                `,
+                shapesToAsk: ['square', 'triangle'],
+                answers: { square: 2, triangle: 4 }
+            },
+            {
+                id: 11,
+                // 11. Tam giác vuông có hình vuông bên trong
+                svg: `
+                    <svg viewBox="-20 -20 340 340" class="w-full h-auto max-h-64 object-contain overflow-visible drop-shadow-md">
+                        <polygon points="50,50 50,250 250,250" fill="#ffffff" stroke="#1e293b" stroke-width="4" stroke-linejoin="round"/>
+                        <rect x="50" y="150" width="100" height="100" fill="transparent" stroke="#1e293b" stroke-width="4" stroke-linejoin="round"/>
+                    </svg>
+                `,
+                shapesToAsk: ['triangle'],
+                answers: { triangle: 3 }
+            },
+            {
+                id: 12,
+                // 12. Tam giác lớn có đường cao và các đường chia phụ
+                svg: `
+                    <svg viewBox="-20 -20 340 340" class="w-full h-auto max-h-64 object-contain overflow-visible drop-shadow-md">
+                        <polygon points="150,50 50,250 250,250" fill="#ffffff" stroke="#1e293b" stroke-width="4" stroke-linejoin="round"/>
+                        <line x1="150" y1="50" x2="150" y2="250" stroke="#1e293b" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="150" y1="150" x2="200" y2="150" stroke="#1e293b" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="150" y1="150" x2="250" y2="250" stroke="#1e293b" stroke-width="4" stroke-linecap="round"/>
+                    </svg>
+                `,
+                shapesToAsk: ['triangle'],
+                answers: { triangle: 7 }
+            },
+            {
+                id: 13,
+                // 13. Hình vuông có 2 đường chéo, 1 ngang, 1 dọc nửa trên
+                svg: `
+                    <svg viewBox="-20 -20 340 340" class="w-full h-auto max-h-64 object-contain overflow-visible drop-shadow-md">
+                        <rect x="50" y="50" width="200" height="200" fill="#ffffff" stroke="#1e293b" stroke-width="4" stroke-linejoin="round"/>
+                        <line x1="50" y1="50" x2="250" y2="250" stroke="#1e293b" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="250" y1="50" x2="50" y2="250" stroke="#1e293b" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="50" y1="150" x2="250" y2="150" stroke="#1e293b" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="150" y1="50" x2="150" y2="150" stroke="#1e293b" stroke-width="4" stroke-linecap="round"/>
+                    </svg>
+                `,
+                shapesToAsk: ['triangle'],
+                answers: { triangle: 14 }
+            },
+            {
+                id: 14,
+                // 14. Hình chữ nhật chia 3 hình vuông, có đường chéo
+                svg: `
+                    <svg viewBox="10 80 280 140" class="w-full h-auto max-h-64 object-contain overflow-visible drop-shadow-md">
+                        <rect x="30" y="110" width="240" height="80" fill="#ffffff" stroke="#1e293b" stroke-width="4" stroke-linejoin="round"/>
+                        <line x1="110" y1="110" x2="110" y2="190" stroke="#1e293b" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="190" y1="110" x2="190" y2="190" stroke="#1e293b" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="30" y1="190" x2="110" y2="110" stroke="#1e293b" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="110" y1="190" x2="190" y2="110" stroke="#1e293b" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="190" y1="190" x2="270" y2="110" stroke="#1e293b" stroke-width="4" stroke-linecap="round"/>
+                    </svg>
+                `,
+                shapesToAsk: ['square', 'triangle'],
+                answers: { square: 3, triangle: 6 }
+            },
+            {
+                id: 15,
+                // 15. Hình vuông chữ X, 2 tam giác dính 2 bên
+                svg: `
+                    <svg viewBox="0 70 300 160" class="w-full h-auto max-h-64 object-contain overflow-visible drop-shadow-md">
+                        <polygon points="90,90 90,210 20,150" fill="#ffffff" stroke="#1e293b" stroke-width="4" stroke-linejoin="round"/>
+                        <polygon points="210,90 210,210 280,150" fill="#ffffff" stroke="#1e293b" stroke-width="4" stroke-linejoin="round"/>
+                        <rect x="90" y="90" width="120" height="120" fill="#ffffff" stroke="#1e293b" stroke-width="4" stroke-linejoin="round"/>
+                        <line x1="90" y1="90" x2="210" y2="210" stroke="#1e293b" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="210" y1="90" x2="90" y2="210" stroke="#1e293b" stroke-width="4" stroke-linecap="round"/>
+                    </svg>
+                `,
+                shapesToAsk: ['square', 'triangle'],
+                answers: { square: 1, triangle: 10 }
+            },
+            {
+                id: 16,
+                // 16. Hình vuông lớn chứa hình thoi, chia đôi dọc
+                svg: `
+                    <svg viewBox="-20 -20 340 340" class="w-full h-auto max-h-64 object-contain overflow-visible drop-shadow-md">
+                        <rect x="50" y="50" width="200" height="200" fill="#ffffff" stroke="#1e293b" stroke-width="4" stroke-linejoin="round"/>
+                        <polygon points="150,50 250,150 150,250 50,150" fill="transparent" stroke="#1e293b" stroke-width="4" stroke-linejoin="round"/>
+                        <line x1="150" y1="50" x2="150" y2="250" stroke="#1e293b" stroke-width="4" stroke-linecap="round"/>
+                    </svg>
+                `,
+                shapesToAsk: ['square', 'triangle'],
+                answers: { square: 2, triangle: 6 }
+            }
+        ];
+
+        // Định nghĩa các loại hình để render
+        const shapeTypes = {
+            'square': { name: 'Hình vuông', color: 'bg-orange-100', icon: '<rect x="4" y="4" width="16" height="16" fill="#facc15" stroke="#1f2937" stroke-width="2"/>' },
+            'triangle': { name: 'Hình tam giác', color: 'bg-green-100', icon: '<polygon points="12,2 22,20 2,20" fill="#ef4444" stroke="#1f2937" stroke-width="2" stroke-linejoin="round"/>' },
+            'rectangle': { name: 'Hình chữ nhật', color: 'bg-blue-100', icon: '<rect x="2" y="6" width="20" height="12" fill="#3b82f6" stroke="#1f2937" stroke-width="2"/>' },
+            'circle': { name: 'Hình tròn', color: 'bg-purple-100', icon: '<circle cx="12" cy="12" r="9" fill="#a855f7" stroke="#1f2937" stroke-width="2"/>' }
+        };
+
+        // --- 2. BIẾN TRẠNG THÁI ---
+        let currentLevelIndex = 0;
+        let audioInstance = null;
+        let currentAnswers = {};
+        let studentName = "bé";
+        let completedLevels = new Set();
+
+        // --- 3. HỆ THỐNG ÂM THANH (Google Translate TTS) ---
+        function playAudio(text, onEndedCallback = null) {
+            try {
+                if (audioInstance) {
+                    audioInstance.pause();
+                    audioInstance.currentTime = 0;
+                }
+                const url = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=vi&client=tw-ob&q=' + encodeURIComponent(text);
+                audioInstance = new Audio(url);
+                if (onEndedCallback) {
+                    audioInstance.onended = onEndedCallback;
+                }
+                audioInstance.play().catch(e => console.warn("Lỗi phát âm thanh:", e));
+            } catch (err) {
+                console.error("Lỗi khởi tạo âm thanh:", err);
+            }
+        }
+
+        function playInstruction() {
+            playAudio(studentName + " hãy quan sát và đếm số hình nhé");
+        }
+
+        // --- 4. HỆ THỐNG UI ---
+        function updateHeader() {
+            document.getElementById('progress-text').innerText = `${currentLevelIndex + 1}/${levelsData.length}`;
+            const starContainer = document.getElementById('star-container');
+            starContainer.innerHTML = '';
+            for(let i = 0; i < levelsData.length; i++) {
+                const isGold = i <= currentLevelIndex;
+                starContainer.innerHTML += `
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 ${isGold ? 'text-yellow-400' : 'text-gray-200'} fill-current drop-shadow-sm transition-colors duration-500" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>`;
+            }
+        }
+
+        function showScreen(id) {
+            ['screen-start', 'screen-play', 'screen-celebrate'].forEach(s => {
+                document.getElementById(s).classList.add('hidden');
+            });
+            document.getElementById(id).classList.remove('hidden');
+            
+            const header = document.getElementById('main-header');
+            if (id === 'screen-start') {
+                header.classList.add('hidden');
+            } else {
+                header.classList.remove('hidden');
+            }
+        }
+
+        // --- 5. LOGIC TRÒ CHƠI ---
+        function startGame() {
+            const nameInput = document.getElementById('student-name').value.trim();
+            studentName = nameInput !== "" ? nameInput : "bé";
+            completedLevels.clear();
+            currentLevelIndex = 0;
+            playInstruction();
+            loadLevel();
+            showScreen('screen-play');
+        }
+
+        function loadLevel() {
+            updateHeader();
+            updateLevelSelector();
+            const level = levelsData[currentLevelIndex];
+            
+            // Render Hình Ảnh SVG
+            document.getElementById('image-container').innerHTML = level.svg;
+
+            // Render Các Hàng Chọn Số
+            const inputContainer = document.getElementById('input-container');
+            inputContainer.innerHTML = '';
+            
+            level.shapesToAsk.forEach(shapeKey => {
+                const shape = shapeTypes[shapeKey];
+                const row = document.createElement('div');
+                row.className = `flex items-center justify-between p-3 rounded-2xl ${shape.color} shadow-sm border-2 border-transparent transition-colors`;
+                row.id = `row-${shapeKey}`;
+                
+                row.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <svg width="36" height="36" viewBox="0 0 24 24" class="drop-shadow-sm shrink-0 bg-white p-1.5 rounded-full shadow-sm">
+                            ${shape.icon}
+                        </svg>
+                        <span class="text-gray-800 font-bold text-base sm:text-lg">${shape.name}</span>
+                    </div>
+                    <div class="flex items-center gap-1 sm:gap-2 bg-white/80 rounded-full p-1 border border-indigo-100 shadow-sm">
+                        <button onclick="changeValue('${shapeKey}', -1)" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-rose-100 hover:bg-rose-200 text-rose-600 font-black text-2xl shadow-sm flex items-center justify-center active:scale-90 transition-transform leading-none pb-1">-</button>
+                        <input type="number" id="input-${shapeKey}" value="0" readonly class="w-10 sm:w-12 text-center text-2xl sm:text-3xl font-black text-indigo-700 bg-transparent outline-none cursor-default select-none pointer-events-none">
+                        <button onclick="changeValue('${shapeKey}', 1)" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-green-100 hover:bg-green-200 text-green-600 font-black text-2xl shadow-sm flex items-center justify-center active:scale-90 transition-transform leading-none pb-1">+</button>
+                    </div>
+                `;
+                inputContainer.appendChild(row);
+            });
+        }
+
+        function checkAnswer() {
+            const level = levelsData[currentLevelIndex];
+            let isAllCorrect = true;
+            
+            // Kiểm tra từng hình trong mảng shapesToAsk
+            level.shapesToAsk.forEach(shapeKey => {
+                const correctAmount = level.answers[shapeKey] || 0;
+                const inputEl = document.getElementById(`input-${shapeKey}`);
+                const rowEl = document.getElementById(`row-${shapeKey}`);
+                
+                const userAmount = parseInt(inputEl.value) || 0;
+                
+                if (userAmount !== correctAmount) {
+                    isAllCorrect = false;
+                    rowEl.classList.add('border-red-400', 'bg-red-50');
+                    inputEl.classList.add('text-red-600');
+                    inputEl.classList.remove('text-indigo-700');
+                } else {
+                    rowEl.classList.remove('border-red-400', 'bg-red-50');
+                    rowEl.classList.add('border-green-400', 'bg-green-100');
+                    inputEl.classList.remove('text-red-600');
+                    inputEl.classList.add('text-green-700');
+                }
+            });
+
+            if (isAllCorrect) {
+                // Thêm vào danh sách hoàn thành
+                completedLevels.add(currentLevelIndex);
+                updateLevelSelector();
+                
+                // Tắt các input và nút bấm để không sửa nữa
+                level.shapesToAsk.forEach(sk => {
+                    document.getElementById(`input-${sk}`).disabled = true;
+                    // Vô hiệu hóa các nút tăng giảm
+                    const row = document.getElementById(`row-${sk}`);
+                    const buttons = row.querySelectorAll('button');
+                    buttons.forEach(btn => {
+                        btn.disabled = true;
+                        btn.classList.add('opacity-50', 'cursor-not-allowed', 'active:scale-100');
+                    });
+                });
+                
+                playAudio("Giỏi quá, " + studentName + " đếm đúng rồi!", () => {
+                    // Chờ đọc xong thì tự động chuyển câu hoặc hiện màn kết thúc
+                    setTimeout(() => {
+                        if (completedLevels.size >= levelsData.length) {
+                            showScreen('screen-celebrate');
+                            document.getElementById('celebrate-name').innerText = studentName;
+                            playAudio(`Chúc mừng ${studentName} em đã hoàn thành bài tập`);
+                        } else {
+                            // Tự động tìm bài chưa làm tiếp theo
+                            let nextLevel = currentLevelIndex + 1;
+                            while (completedLevels.has(nextLevel) && nextLevel < levelsData.length) {
+                                nextLevel++;
+                            }
+                            
+                            if (nextLevel < levelsData.length) {
+                                currentLevelIndex = nextLevel;
+                            } else {
+                                // Nếu đã vượt qua mảng, vòng lại tìm câu chưa làm đầu tiên
+                                for (let i = 0; i < levelsData.length; i++) {
+                                    if (!completedLevels.has(i)) {
+                                        currentLevelIndex = i;
+                                        break;
+                                    }
+                                }
+                            }
+                            loadLevel();
+                            playInstruction();
+                        }
+                    }, 500); 
+                });
+                
+            } else {
+                playAudio("Chưa chính xác, " + studentName + " thử đếm lại nhé");
+            }
+        }
+
+        function resetGame() {
+            currentLevelIndex = 0;
+            completedLevels.clear();
+            document.getElementById('student-name').value = ''; // Reset tên để có thể nhập bé khác
+            showScreen('screen-start');
+        }
+
+        // --- CÁC HÀM MỚI BỔ SUNG ---
+        
+        function updateLevelSelector() {
+            const selector = document.getElementById('level-selector');
+            if (!selector) return;
+            selector.innerHTML = '';
+            
+            levelsData.forEach((_, idx) => {
+                const isActive = idx === currentLevelIndex;
+                const isCompleted = completedLevels.has(idx);
+                
+                let btnClass = 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200';
+                if (isCompleted) {
+                    btnClass = 'bg-green-500 text-white border-green-600 shadow-inner';
+                }
+                if (isActive) {
+                    btnClass = isCompleted 
+                        ? 'bg-green-500 text-white shadow-md scale-110 border-2 border-white ring-2 ring-green-300 z-10' 
+                        : 'bg-rose-500 text-white shadow-md scale-110 border-2 border-white ring-2 ring-rose-300 z-10';
+                }
+                
+                // Nút tick xanh nhỏ hiển thị ở góc khi đã hoàn thành
+                const tickIcon = isCompleted ? `
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 absolute -top-1 -right-1 text-white bg-green-500 rounded-full border border-white" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                ` : '';
+                
+                selector.innerHTML += `
+                    <button onclick="jumpToLevel(${idx})" 
+                            class="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full font-black text-lg sm:text-xl flex items-center justify-center shrink-0 transition-all transform ${btnClass}">
+                        ${idx + 1}
+                        ${tickIcon}
+                    </button>
+                `;
+            });
+            
+            // Tự động cuộn đến nút đang active (hữu ích trên mobile)
+            setTimeout(() => {
+                const activeBtn = selector.querySelector('.scale-110');
+                if (activeBtn) {
+                    activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                }
+            }, 100);
+        }
+
+        function jumpToLevel(idx) {
+            if (currentLevelIndex === idx) return; // Đang ở level này rồi thì bỏ qua
+            currentLevelIndex = idx;
+            loadLevel();
+            playAudio(`Bài ${idx + 1}`);
+        }
+
+        function changeValue(shapeKey, delta) {
+            const input = document.getElementById(`input-${shapeKey}`);
+            if (!input || input.disabled) return;
+            
+            let val = parseInt(input.value) || 0;
+            val += delta;
+            
+            // Ràng buộc giá trị từ 0 đến 20
+            if (val < 0) val = 0;
+            if (val > 20) val = 20;
+            
+            input.value = val;
+            
+            // Tự động gỡ bỏ trạng thái báo lỗi đỏ khi bé sửa đáp án
+            const rowEl = document.getElementById(`row-${shapeKey}`);
+            rowEl.classList.remove('border-red-400', 'bg-red-50');
+            input.classList.remove('text-red-600');
+            input.classList.add('text-indigo-700');
+            
+            // Thêm hiệu ứng pop nhẹ khi bấm
+            input.classList.add('scale-110');
+            setTimeout(() => input.classList.remove('scale-110'), 150);
+        }
+
+    </script>
+</body>
+</html>
